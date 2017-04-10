@@ -8,15 +8,33 @@
 
 import Cocoa
 
+class PortMenuItem: NSMenuItem{
+    var orsPort:ORSSerialPort?
+}
+
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
 
 
+    @IBOutlet weak var portMenu: NSMenu!
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Insert code here to initialize your application
+        let manager = ORSSerialPortManager()
+        if manager.availablePorts.count != 0{
+            for port in manager.availablePorts{
+                let item = PortMenuItem()
+                item.title = port.name
+                item.isEnabled = true
+                item.state = (port.path == "/dev/cu.Bluetooth-Incoming-Port") ? 1 : 0
+                item.action = #selector(ViewController.portSetup(_:))
+                item.orsPort = port
+                portMenu.addItem(item)
+            }
+        }
     }
 
+    
+    
     func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
     }

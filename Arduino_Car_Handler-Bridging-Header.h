@@ -9,5 +9,6 @@
 #ifndef Arduino_Car_Handler_Bridging_Header_h
 #define Arduino_Car_Handler_Bridging_Header_h
 #import <ORSSerialPort/ORSSerialPort.h>
+#import <ORSSerialPort/ORSSerialPortManager.h>
 
 #endif /* Arduino_Car_Handler_Bridging_Header_h */

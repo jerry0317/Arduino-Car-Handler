@@ -57,10 +57,11 @@ int derA = 9;
 int derB = 10; 
 int vel = 255; // Velocidad de los motores (0-255)
 int estado = 'g'; // inicia detenido
+int speakerPin = 11;
 
 void setup(void) { 
-Serial.begin(9600);
-
+  Serial.begin(9600);
+  pinMode(speakerPin, OUTPUT);
   // Initialize ADXL345
   Serial.println("Initialize ADXL345");
   if (!accelerometer.begin())
@@ -117,19 +118,34 @@ void loop(void) {
   Serial.print(norm.ZAxis);*/
 
 a=sr04.Distance();
-  Serial.print("{\"a_x\":\"");
-  Serial.print(norm.XAxis);
-  Serial.print("\", \"a_y\":\"");
-  Serial.print(norm.YAxis);
-  Serial.print("\", \"a_z\":\"");
-  Serial.print(norm.ZAxis);
-  Serial.print(", \"USDistance\":\"");
-  Serial.print(a);
-  Serial.print("\"}");
-
-  Serial.println();
-  
+if(a <= 25){
+  digitalWrite(speakerPin, HIGH);
+  delay(40);
+  digitalWrite(speakerPin, LOW);
+  if(a * 10 > 60){
+    delay(60);
+  }else{
+    delay(a * 10);
+  }
+   
+}else{
+  digitalWrite(speakerPin, LOW);
   delay(100);
+}
+String serial = "";
+  serial.concat("{\"a_x\":\"");
+  serial.concat(norm.XAxis);
+  serial.concat("\", \"a_y\":\"");
+  serial.concat(norm.YAxis);
+  serial.concat("\", \"a_z\":\"");
+  serial.concat(norm.ZAxis);
+  serial.concat("\", \"USDistance\":\"");
+  serial.concat(a);
+  serial.concat("\"}");
+  serial.concat("\r\n");
+  Serial.print(serial);
+  
+ 
 
 //Serial.print(a);
 //Serial.println("cm");
@@ -175,9 +191,10 @@ analogWrite(derB, vel);
 analogWrite(izqB, vel); 
 }
 if (estado =='f'){ // Boton ON se mueve sensando distancia 
-digitalWrite(11, HIGH);
+   digitalWrite(speakerPin, HIGH);
 }
 if (estado=='g'){ // Boton OFF, detiene los motores no hace nada 
+  digitalWrite(speakerPin, LOW);
 }
 }
 

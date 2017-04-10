@@ -9,14 +9,20 @@
 import Cocoa
 import CoreGraphics
 
+
+
 class ViewController: NSViewController, ORSSerialPortDelegate {
 
     // MARK: Class Variables
     
     /* Define the path of the serial port here */
-    let arduino = ORSSerialPort(path: "/dev/tty.Bluetooth-Incoming-Port")
-    var model:ADOModel = ADOModel(dt: 10.0)
+    var arduino = ORSSerialPort(path: "/dev/cu.Bluetooth-Incoming-Port")
+    var model:ADOModel = ADOModel()
     var lastData:JSON?
+    var realTimeArray:[String] = []
+    var stringInQueue = ""
+    var keyIsDown = false
+    
     var isRecording = false {
         didSet{
             if isRecording == false {
@@ -31,15 +37,18 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
     // MARK: Serial Port Part
     
     func serialPortWasRemoved(fromSystem serialPort: ORSSerialPort) {
-        return
+        statusLabel.stringValue = "Status: Disconnected"
+        distanceLabel.stringValue = ""
     }
     
     func serialPortWasOpened(_ serialPort: ORSSerialPort) {
         statusLabel.stringValue = "Status: Connected"
+        distanceLabel.stringValue = "Distance: N/A"
     }
     
     func serialPortWasClosed(_ serialPort: ORSSerialPort) {
         statusLabel.stringValue = "Status: Disconnected"
+        distanceLabel.stringValue = ""
     }
     
     func serialPort(_ serialPort: ORSSerialPort, didEncounterError error: Error) {
@@ -48,21 +57,49 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
     }
     
     func serialPort(_ serialPort: ORSSerialPort, didReceive data: Data) {
-        print(String(data: data, encoding: .utf8) ?? "[NULL]")
-        guard isRecording else {
-            return
-        }
-        let currentData = JSON(data: data)
-        guard let a_xf = currentData["a_x"].double, let a_yf = currentData["a_y"].double, let usd = currentData["USDistance"].double else {
-            return
-        }
-        guard let a_xi = lastData?["a_x"].double, let a_yi = lastData?["a_y"].double else{
+        
+        func graphicHandler(_ currentData: JSON){
+            guard isRecording else {
+                return
+            }
+            guard let a_xf = Double(currentData["a_x"].stringValue), let a_yf = Double(currentData["a_y"].stringValue), let a_zf = Double(currentData["a_z"].stringValue), let usd = Double(currentData["USDistance"].stringValue) else {
+                print("Current Data Failed")
+                return
+            }
+            guard let a_xi = Double((lastData?["a_x"].stringValue) ?? ""), let a_yi = Double((lastData?["a_y"].stringValue) ?? ""), let a_zi = Double((lastData?["a_z"].stringValue) ?? "") else{
+                print("Last Data Failed")
+                lastData = currentData
+                return
+            }
+            let d_ax = a_xf - a_xi
+            let d_ay = a_yf - a_yi
+            let d_az = a_zf - a_zi
+            self.outputImageView.image = self.model.render(da: (d_ax, d_ay, d_az), distance: usd)
             lastData = currentData
-            return
         }
-        let d_ax = a_xf - a_xi
-        let d_ay = a_yf - a_yi
-        self.outputImageView.image = self.model.render(da: (d_ax, d_ay), distance: usd)
+        
+        func distanceHandler(_ currentData: JSON){
+            guard let usd = currentData["USDistance"].string else {
+                distanceLabel.stringValue = "Distance: N/A"
+                return
+            }
+            distanceLabel.stringValue = "Distance: \(usd)cm"
+        }
+        
+        let dataString = String(data: data, encoding: .utf8) ?? ""
+        stringInQueue += dataString
+        
+        if stringInQueue.contains("\r\n"){
+            let validString = stringInQueue.components(separatedBy: "\r\n")[0]
+            let json = JSON(parseJSON: validString)
+            graphicHandler(json)
+            distanceHandler(json)
+            print("\(validString)")
+            stringInQueue = stringInQueue.components(separatedBy: "\r\n")[1]
+        }
+        
+        //print(String(data: data, encoding: .utf8) ?? "[NULL]")
+        
     }
     
     // MARK: Class Functions & Overriding Variables
@@ -83,6 +120,23 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
     }
     
     override func keyDown(with event: NSEvent) {
+        //print(event.keyCode)
+        
+        switch event.keyCode{
+        case 0:
+            outputImageView.image = model.cheatRender(.left)
+        case 1:
+            outputImageView.image = model.cheatRender(.backward)
+        case 2:
+            outputImageView.image = model.cheatRender(.right)
+        case 13:
+            outputImageView.image = model.cheatRender(.forward)
+        default:
+            break
+        }
+        
+        guard keyIsDown == false else { return }
+        
         switch event.keyCode{
         case 123:
             sendOrder(.left)
@@ -95,10 +149,12 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
         default:
             break
         }
+        keyIsDown = true
         
     }
     
     override func keyUp(with event: NSEvent) {
+        keyIsDown = false
         switch event.keyCode{
         case 123,124,125,126:
             sendOrder(.stop)
@@ -114,6 +170,21 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
     }
     
     // MARK: Arduino Functions
+    
+    func portSetup(_ sender: PortMenuItem){
+        disconnect()
+        if let items = sender.menu?.items, items.count > 0{
+            for item in items {
+                item.state = 0
+            }
+        }
+        arduino = sender.orsPort
+        arduino?.baudRate = 9600
+        arduino?.delegate = self
+        sender.state = 1
+        
+        print("\(arduino?.name ?? "") has been set up.")
+    }
     
     enum arduinoOrder {
         case forward
@@ -137,15 +208,15 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
         var sendingData = ""
         switch order {
         case .forward:
-            sendingData = "a"
+            sendingData = "e"
         case .left:
-            sendingData = "b"
+            sendingData = "d"
         case .stop:
             sendingData = "c"
         case .right:
-            sendingData = "d"
+            sendingData = "b"
         case .backward:
-            sendingData = "e"
+            sendingData = "a"
         }
         let data = Data(bytes: Array(sendingData.utf8))
         arduino?.send(data)
@@ -156,13 +227,13 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
     
     @IBOutlet weak var outputImageView: NSImageView!
     @IBOutlet weak var statusLabel: NSTextField!
-
+    @IBOutlet weak var distanceLabel: NSTextField!
     @IBOutlet var inputTextView: NSTextView!
     @IBOutlet weak var tryButton: NSButton!
     @IBAction func resetAction(_ sender: Any) {
         outputImageView.image = nil
-        inputTextView.string = nil
-        model = ADOModel(dt: 10.0)
+        inputTextView.string = ""
+        model = ADOModel()
     }
     @IBAction func tryAction(_ sender: Any) {
         outputImageView.image = nil
@@ -170,7 +241,7 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
         var textArray = text?.components(separatedBy: NSCharacterSet.newlines) ?? []
         textArray = textArray.filter({$0 != ""})
         
-        self.model = ADOModel(dt: 10.0)
+        self.model = ADOModel(dt: 5.0)
         
         guard textArray.count >= 2 else { return }
         for i in 1...(textArray.count - 1) {
@@ -182,9 +253,10 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
                 let dataf = JSON(parseJSON: setf)
                 let da_x = dataf["a_x"].doubleValue - datai["a_x"].doubleValue
                 let da_y = dataf["a_y"].doubleValue - datai["a_y"].doubleValue
+                let da_z = dataf["a_z"].doubleValue - datai["a_z"].doubleValue
                 let usd = dataf["USDistance"].doubleValue
                 
-                self.outputImageView.image = self.model.render(da: (da_x, da_y), distance: usd)
+                self.outputImageView.image = self.model.render(da: (da_x, da_y, da_z), distance: usd)
             })
         }
     }
@@ -193,7 +265,7 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
         connect()
         inputTextView.isEditable = false
         tryButton.isEnabled = false
-        self.view.becomeFirstResponder()
+        inputTextView.resignFirstResponder()
     }
     /* Disconnect to the Serial Port, and re-enable the manual input */
     @IBAction func disconnectAction(_ sender: Any) {
@@ -227,11 +299,37 @@ class ViewController: NSViewController, ORSSerialPortDelegate {
     /* Pause Auto Recording, with image perserved, data cleared */
     @IBAction func stopAutoRecordingAction(_ sender: Any) {
         isRecording = false
-        model = ADOModel(dt: 10.0)
+        model = ADOModel()
     }
 }
 
 class IndexView: NSView{
+    override var acceptsFirstResponder: Bool {
+        return true
+    }
+    override func keyDown(with event: NSEvent) {
+        self.nextResponder?.keyDown(with: event)
+    }
+    
+    override func keyUp(with event: NSEvent) {
+        self.nextResponder?.keyUp(with: event)
+    }
+}
+
+class IndexWindow: NSWindow{
+    override var acceptsFirstResponder: Bool {
+        return true
+    }
+    override func keyDown(with event: NSEvent) {
+        self.nextResponder?.keyDown(with: event)
+    }
+    
+    override func keyUp(with event: NSEvent) {
+        self.nextResponder?.keyUp(with: event)
+    }
+}
+
+class IndexWindowController: NSWindowController{
     override var acceptsFirstResponder: Bool {
         return true
     }
@@ -260,12 +358,14 @@ class ADOModel{
     var da_y = 0.0
     var x = 0.0
     var y = 0.0
-    var dt = 10.0
+    var a_z = 10.04
+    var da_z = 0.0
+    var dt = 1.0
     var point:NSPoint{
         return NSPoint(x:x, y:y)
     }
     var usd = 0.0
-    let usdLimit:Double = Double.infinity /* Define the Minimum Ultrasonic Distance here (in cm, default as no limit) */
+    var usdLimit:Double = Double.infinity /* Define the Minimum Ultrasonic Distance here (in cm, default as no limit) */
     
     var max = (100.0, 100.0)
     var min = (0.0, 0.0)
@@ -281,23 +381,99 @@ class ADOModel{
     }
     
     /* Render the path of previous points, with the input of the da_x, da_y and usd */
-    func render(da: (Double, Double), distance:Double? = nil) -> NSImage {
+    func render(da: (Double, Double, Double), distance:Double? = nil) -> NSImage {
         self.da_x = da.0
         self.da_y = da.1
-        a_x = a_x + (da_x * dt)
-        v_x = v_x + (a_x * dt)
-        x = x + (v_x * dt)
-        a_y = a_y + (da_y * dt)
-        v_y = v_y + (a_y * dt)
-        y = y + (v_y * dt)
-        
+        self.da_z = da.2
         
         if let usd = distance {
             self.usd = usd
         }
+        
+        if abs(da.0) >= 0.2 && abs(da.1) >= 0.2 && abs(da.2) >= 0.2  {
+            a_z = a_z + (da_z * dt)
+            
+            a_x = a_x + (((da_x * a_z) + (a_x * da_z)) / 10.04 * dt)
+            v_x = v_x + (a_x * dt)
+            x = x + (v_x * dt)
+            a_y = a_y + (((da_y * a_z) + (a_y * da_z)) / 10.04 * dt)
+            v_y = v_y + (a_y * dt)
+            y = y + (v_y * dt)
+            
+            print(">> a_x: \(a_x) v_x: \(v_x) a_y: \(a_y) v_y: \(v_y)")
+            
+            rawPointSet.append((point, self.usd))
+            
+            maxNminCheck()
+            
+        }else{
+            print(">> This point was filtered.")
+            v_x = 0
+            a_x = 0
+            v_y = 0
+            a_y = 0
+            a_z = 10.04
+        }
+        
+        return generateImage()
+    }
+    
+    enum cheatOrder{
+        case forward
+        case right
+        case backward
+        case left
+        case stop
+    }
+    
+    func cheatRender(_ order: cheatOrder) -> NSImage{
+        v_x = 0
+        a_x = 0
+        v_y = 0
+        a_y = 0
+        a_z = 10.04
+        
+        let distance = 20.0
+        switch order{
+        case .forward:
+            y = y + distance
+        case .backward:
+            y = y - distance
+        case .right:
+            x = x + distance
+        case .left:
+            x = x - distance
+        case .stop:
+            break
+        }
+        
+        maxNminCheck()
         rawPointSet.append((point, self.usd))
         
-        /* Not affecting max and min if usd is smaller than the limit */
+        return generateImage()
+    }
+    
+    private func generateImage() -> NSImage {
+        guard translatedPointSet.count != 0 else { return NSImage() }
+        let size = NSSize(width:(max.0 - min.0), height:(max.1 - min.1))
+        let image = NSImage(size: size)
+        let path = NSBezierPath()
+        path.move(to: translatedPointSet[0].0)
+        path.lineWidth = 4.0
+        image.lockFocus()
+        for i in 0...(translatedPointSet.count - 1){
+        /* Not drawing the line to the points where usd is larger than the limit */
+        if(translatedPointSet[i].1 <= usdLimit){
+        path.line(to: translatedPointSet[i].0)
+        }
+        }
+        path.stroke()
+        image.unlockFocus()
+        return image
+    }
+    
+    /* Not affecting max and min if usd is larger than the limit */
+    private func maxNminCheck(){
         if usd <= usdLimit{
             if x > max.0 {
                 max.0 = x
@@ -312,22 +488,25 @@ class ADOModel{
                 min.1 = y
             }
         }
-        
-        guard translatedPointSet.count != 0 else { return NSImage() }
-        let size = NSSize(width:(max.0 - min.0), height:(max.1 - min.1))
-        let image = NSImage(size: size)
-        let path = NSBezierPath()
-        path.move(to: translatedPointSet[0].0)
-        image.lockFocus()
-        for i in 0...(translatedPointSet.count - 1){
-            /* Not drawing the line to the points where usd is smaller than the limit */
-            if(translatedPointSet[i].1 <= usdLimit){
-                path.line(to: translatedPointSet[i].0)
-            }
-        }
-        path.stroke()
-        image.unlockFocus()
-        return image
+    }
+    
+    func reset(){
+        v_x = 0.0
+        v_y = 0.0
+        a_x = 0.0
+        a_y = 0.0
+        da_x = 0.0
+        da_y = 0.0
+        x = 0.0
+        y = 0.0
+        a_z = 10.04
+        da_z = 0.0
+        dt = 1.0
+        usd = 0.0
+        usdLimit = Double.infinity /* Define the Minimum Ultrasonic Distance here (in cm, default as no limit) */
+        max = (100.0, 100.0)
+        min = (0.0, 0.0)
+        rawPointSet.removeAll()
     }
 }
 

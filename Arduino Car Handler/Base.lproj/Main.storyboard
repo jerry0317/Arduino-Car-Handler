@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="12118" systemVersion="16C67" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="12118" systemVersion="16E195" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12118"/>
@@ -638,6 +638,10 @@
                                     </items>
                                 </menu>
                             </menuItem>
+                            <menuItem title="Port" state="on" id="nw5-fQ-7j7">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Port" autoenablesItems="NO" id="UhU-Wh-Si9"/>
+                            </menuItem>
                             <menuItem title="Help" id="wpr-3q-Mcd">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Help" systemMenu="help" id="F2S-fz-NVQ">
@@ -656,7 +660,11 @@
                         <outlet property="delegate" destination="Voe-Tx-rLC" id="PrD-fu-P6m"/>
                     </connections>
                 </application>
-                <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="Arduino_Car_Handler" customModuleProvider="target"/>
+                <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="Arduino_Car_Handler" customModuleProvider="target">
+                    <connections>
+                        <outlet property="portMenu" destination="UhU-Wh-Si9" id="Pes-7H-Qxi"/>
+                    </connections>
+                </customObject>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="75" y="0.0"/>
@@ -664,8 +672,8 @@
         <!--Window Controller-->
         <scene sceneID="R2V-B0-nI4">
             <objects>
-                <windowController id="B8D-0N-5wS" sceneMemberID="viewController">
-                    <window key="window" title="Arduino Car Handler" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA">
+                <windowController id="B8D-0N-5wS" customClass="IndexWindowController" customModule="Arduino_Car_Handler" customModuleProvider="target" sceneMemberID="viewController">
+                    <window key="window" title="Arduino Car Handler" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA" customClass="IndexWindow" customModule="Arduino_Car_Handler" customModuleProvider="target">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="196" y="240" width="480" height="270"/>
@@ -884,6 +892,14 @@
                                     <action selector="resetAction:" target="XfG-lQ-9wD" id="gay-9Q-hXd"/>
                                 </connections>
                             </button>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TK4-0n-P6q">
+                                <rect key="frame" x="384" y="510" width="4" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="zUC-e1-3mt">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
                         </subviews>
                         <constraints>
                             <constraint firstItem="YJm-g2-SmV" firstAttribute="trailing" secondItem="yp1-dF-U6b" secondAttribute="trailing" id="1qf-bd-6JJ"/>
@@ -891,9 +907,9 @@
                             <constraint firstItem="8GV-LA-RrD" firstAttribute="baseline" secondItem="yp1-dF-U6b" secondAttribute="baseline" id="3JD-Q8-6mD"/>
                             <constraint firstItem="8GV-LA-RrD" firstAttribute="trailing" secondItem="5cO-6y-o5X" secondAttribute="trailing" id="4aF-fe-Ntw"/>
                             <constraint firstItem="87L-jd-IxO" firstAttribute="leading" secondItem="wJJ-cr-RKd" secondAttribute="trailing" constant="76" id="4px-rF-UQ5"/>
+                            <constraint firstItem="bLM-l2-Q6g" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="TK4-0n-P6q" secondAttribute="trailing" constant="20" id="5BD-RA-FDP"/>
                             <constraint firstItem="fcd-1q-gpq" firstAttribute="top" secondItem="FEp-8O-Mu7" secondAttribute="bottom" constant="19" id="6ZR-yr-7f6"/>
                             <constraint firstAttribute="bottom" secondItem="V22-Fh-gU2" secondAttribute="bottom" constant="9" id="8ZP-ok-Fo7"/>
-                            <constraint firstItem="bLM-l2-Q6g" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="S9k-ab-eiJ" secondAttribute="trailing" constant="20" id="8Zt-dc-ndO"/>
                             <constraint firstAttribute="bottom" secondItem="87L-jd-IxO" secondAttribute="bottom" constant="45" id="8iw-oT-K5p"/>
                             <constraint firstItem="Z2w-49-PPE" firstAttribute="baseline" secondItem="yp1-dF-U6b" secondAttribute="baseline" id="9rk-eH-eTZ"/>
                             <constraint firstItem="LH8-rI-6wj" firstAttribute="baseline" secondItem="YJm-g2-SmV" secondAttribute="baseline" id="B8G-UQ-2t3"/>
@@ -918,6 +934,7 @@
                             <constraint firstItem="42h-of-W37" firstAttribute="top" secondItem="KgF-AW-8B9" secondAttribute="bottom" constant="8" symbolic="YES" id="cGz-tT-OYy"/>
                             <constraint firstItem="KgF-AW-8B9" firstAttribute="top" secondItem="fcd-1q-gpq" secondAttribute="bottom" constant="8" symbolic="YES" id="cIJ-XR-Hn6"/>
                             <constraint firstItem="S9k-ab-eiJ" firstAttribute="centerY" secondItem="QuQ-2e-2yj" secondAttribute="centerY" id="d1d-Ih-sPQ"/>
+                            <constraint firstItem="TK4-0n-P6q" firstAttribute="baseline" secondItem="S9k-ab-eiJ" secondAttribute="baseline" id="e94-wb-30o"/>
                             <constraint firstItem="FEp-8O-Mu7" firstAttribute="centerX" secondItem="yp1-dF-U6b" secondAttribute="centerX" id="fA4-Jj-IAz"/>
                             <constraint firstItem="YJm-g2-SmV" firstAttribute="leading" secondItem="yp1-dF-U6b" secondAttribute="leading" id="fi6-WO-qe7"/>
                             <constraint firstItem="KgF-AW-8B9" firstAttribute="leading" secondItem="42h-of-W37" secondAttribute="leading" id="ii8-SD-I7P"/>
@@ -933,10 +950,12 @@
                             <constraint firstItem="fcd-1q-gpq" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="15" id="sgq-kR-UW7"/>
                             <constraint firstItem="wJJ-cr-RKd" firstAttribute="trailing" secondItem="FEp-8O-Mu7" secondAttribute="trailing" id="tyL-rN-KOO"/>
                             <constraint firstItem="V22-Fh-gU2" firstAttribute="trailing" secondItem="QuQ-2e-2yj" secondAttribute="trailing" id="v8c-2U-Qrd"/>
+                            <constraint firstItem="TK4-0n-P6q" firstAttribute="leading" secondItem="S9k-ab-eiJ" secondAttribute="trailing" constant="8" symbolic="YES" id="vXE-sn-QWb"/>
                             <constraint firstItem="Ugf-hA-3tI" firstAttribute="top" secondItem="5cO-6y-o5X" secondAttribute="bottom" constant="23" id="yyo-Qg-qFU"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="distanceLabel" destination="TK4-0n-P6q" id="HuQ-tF-er2"/>
                         <outlet property="inputTextView" destination="Ad1-cZ-G5h" id="63r-RQ-QeO"/>
                         <outlet property="outputImageView" destination="87L-jd-IxO" id="Sec-jN-lRD"/>
                         <outlet property="statusLabel" destination="S9k-ab-eiJ" id="SvT-JP-NBl"/>
