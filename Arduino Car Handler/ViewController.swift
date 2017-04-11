@@ -400,6 +400,16 @@ class ADOModel{
             v_y = v_y + (a_y * dt)
             y = y + (v_y * dt)
             
+            let max_speed = 15.0
+            
+            if v_x >= max_speed {
+                v_x = max_speed
+            }
+            
+            if v_y >= max_speed {
+                v_y = max_speed
+            }
+            
             print(">> a_x: \(a_x) v_x: \(v_x) a_y: \(a_y) v_y: \(v_y)")
             
             rawPointSet.append((point, self.usd))
