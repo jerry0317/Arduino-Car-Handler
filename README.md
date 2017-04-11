@@ -2,6 +2,14 @@
 
 *By Jerry Yan, April 2017*
 
+## Hardware Look
+
+![The hardware of the Arduino Car](https://github.com/jerry0317/Arduino-Car-Handler/blob/master/readme_resources/1.jpg)
+
+## Software Look
+
+![The interface of the macOS App of the Arduino Car Handler](https://github.com/jerry0317/Arduino-Car-Handler/blob/master/readme_resources/2.png)
+
 ## System Requirements
 
 - macOS Sierra or later (10.12+)
