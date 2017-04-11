@@ -10,6 +10,10 @@
 
 ![The interface of the macOS App of the Arduino Car Handler](https://github.com/jerry0317/Arduino-Car-Handler/blob/master/readme_resources/2.png)
 
+# Downloads
+
+You can downloads the release version [here](https://github.com/jerry0317/Arduino-Car-Handler/releases/).
+
 ## System Requirements
 
 - macOS Sierra or later (10.12+)
