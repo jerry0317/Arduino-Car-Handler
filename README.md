@@ -12,7 +12,7 @@
 
 # Downloads
 
-You can downloads the release version [here](https://github.com/jerry0317/Arduino-Car-Handler/releases/).
+You can download the release version [here](https://github.com/jerry0317/Arduino-Car-Handler/releases/).
 
 ## System Requirements
 
